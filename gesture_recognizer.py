@@ -23,7 +23,7 @@ def findPalmPoint(im):
 #    kernel = np.ones((3,3),np.uint8)
 #    opening = cv.morphologyEx(im,cv.MORPH_OPEN,kernel, iterations = 3)
     distIm = cv.distanceTransform(np.uint8(im), cv.DIST_C, 5)
-    plt.imshow(distIm)
+#    plt.imshow(distIm)
     return argmax2d(distIm)
 
 def findMassCenter(im):
@@ -76,21 +76,20 @@ def findHandDistanceSignature(palmPoint, mcPoint, contours):
 
 def generate_descriptor(gesture_image):
     print("gesture_image", gesture_image)
-    hand = cv.imread(gesture_image) # Replace hand.jpg with gesture_image
+#    hand = cv.imread(gesture_image) # Replace hand.jpg with gesture_image
     #print("hand", hand)
 
     detector = skinDetector(gesture_image)
     detector.find_skin()
 
-    palmX, palmY = findPalmPoint(detector.binary_mask_image)
+    palmY, palmX = findPalmPoint(detector.binary_mask_image)
     print("Palm X: ", palmX, " Palm Y: ", palmY)
 
-    mcX, mcY = findMassCenter(detector.binary_mask_image)
+    mcY, mcX = findMassCenter(detector.binary_mask_image)
     print("Mc X: ", mcX, " Mc Y: ", mcY)
 
-    thresh_mask = detector.binary_mask_image.astype(np.uint8)
     im, contours, hierarchy = cv.findContours(detector.binary_mask_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-    cv.drawContours(hand, contours, -1, (255, 0, 0), 3)
+#    cv.drawContours(hand, contours, -1, (255, 0, 0), 3)
 
     distSig = findHandDistanceSignature((palmX, palmY), (mcX, mcY), contours)
     print("Contour Shape: ", len(contours))
@@ -98,49 +97,32 @@ def generate_descriptor(gesture_image):
 
 def generate_descriptor_stack(image_folder):
   print(image_folder)
-  gesture_types = ["A", "B", "C", "Five", "Point", "V"]
+  gesture_types = ["open_hand", "thumbs_up"]#"v", "three"]
+  gesture_labels = [0, 1, 2, 3]
   stack_of_descriptors = []
   labels_array = []
+  i = 0
+  stack_of_descriptors = None
+  
   for gesture_type in gesture_types:
     gesture_path = image_folder + gesture_type
     print("gesture_path", gesture_path)
-    for gesture_image in glob.glob(gesture_path + '/uniform/*.ppm'):
-      hand = cv.imread(gesture_image) # Replace hand.jpg with gesture_image
-      #print("hand", hand)
-
-      detector = skinDetector(gesture_image)
-      detector.find_skin()
-
-      palmX, palmY = findPalmPoint(detector.binary_mask_image)
-      print("Palm X: ", palmX, " Palm Y: ", palmY)
-
-      mcX, mcY = findMassCenter(detector.binary_mask_image)
-      print("Mc X: ", mcX, " Mc Y: ", mcY)
-
-      thresh_mask = detector.binary_mask_image.astype(np.uint8)
-      im, contours, hierarchy = cv.findContours(detector.binary_mask_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-      cv.drawContours(hand, contours, -1, (255, 0, 0), 3)
-
-      distSig = findHandDistanceSignature((palmX, palmY), (mcX, mcY), contours)
-      print("Contour Shape: ", len(contours))
-
-      f = plt.figure()
-      f.add_subplot(1, 2, 1)
-      handPlt = cv.drawMarker(hand, (palmX, palmY), (255, 0, 0), markerType=cv.MARKER_CROSS, markerSize=15, thickness=2, line_type=cv.LINE_AA)
-      handPlt = cv.drawMarker(handPlt, (mcX, mcY), (0, 255, 0), markerType=cv.MARKER_CROSS, markerSize=15, thickness=2, line_type=cv.LINE_AA)
-      plt.imshow(handPlt)
-      f.add_subplot(1, 2, 2)
-      plt.imshow(detector.binary_mask_image)
-      stack_of_descriptors.append(distSig)
-      labels_array.append(gesture_type)
-      print("DEscriptor sHape", np.array(stack_of_descriptors).shape)
-  return stack_of_descriptors, labels_array
+    for gesture_image in glob.glob(gesture_path + '/*.png'):
+      distSig = generate_descriptor(gesture_image)
+      if(stack_of_descriptors is None):
+          stack_of_descriptors = distSig
+      else:
+          stack_of_descriptors = np.vstack((stack_of_descriptors, distSig))
+      labels_array.append(gesture_labels[i])
+    i = i + 1
+    
+  return stack_of_descriptors, np.asarray(labels_array)
 
 if __name__ == "__main__":
-  image_folder_path = "/Users/shalini/Documents/TU_Graz/Third_Semester/ImageUnderstandingPracticals/simple_hand_gesture_recognition/Marcel-Test/"
+  image_folder_path = "Custom_Test/"
   descriptor_training_data, training_labels = generate_descriptor_stack(image_folder_path)
-  np.save("descriptor_training_data", descriptor_training_data, allow_pickle=True)
-  np.save("descriptor_training_labels", training_labels, allow_pickle=True)
+  np.save("descriptor_training_data.npy", descriptor_training_data, allow_pickle=True)
+  np.save("descriptor_training_labels.npy", training_labels, allow_pickle=True)
   #old_training_data = np.load("descriptor_training_data.npy")
   #old_labels_data = np.load("descriptor_training_labels.npy")
   #print(old_training_data)

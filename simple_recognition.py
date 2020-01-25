@@ -111,80 +111,86 @@ if __name__ == "__main__":
     # initialize accumulated weight
     accumWeight = 0.5
 
-    # get the reference to the webcam
-    camera = cv2.VideoCapture(0)
+    test_desc = generate_descriptor("Custom_Test/random_test/test_oh0.JPG")
+    test_predict = prediction(knn_model, test_desc)
+    if(test_predict == 0):
+        print("OPEN HAND!")
+    else:
+        print("THUMBS UP!")
+#     # get the reference to the webcam
+#     camera = cv2.VideoCapture(0)
 
-    # region of interest (ROI) coordinates
-    top, right, bottom, left = 10, 350, 225, 590
+#     # region of interest (ROI) coordinates
+#     top, right, bottom, left = 10, 350, 225, 590
 
-    # initialize num of frames
-    num_frames = 0
+#     # initialize num of frames
+#     num_frames = 0
 
-    # random snapshots
-    snapshots = np.random.randint(0, 100, size=20)
-    # keep looping, until interrupted
-    while(True):
-        # get the current frame
-        grabbed, frame = camera.read()
+#     # random snapshots
+#     snapshots = np.random.randint(0, 100, size=20)
+#     # keep looping, until interrupted
+#     while(True):
+#         # get the current frame
+#         grabbed, frame = camera.read()
 
-        # resize the frame
-        frame = imutils.resize(frame, width=700)
+#         # resize the frame
+#         frame = imutils.resize(frame, width=700)
 
-        # flip the frame so that it is not the mirror view
-        frame = cv2.flip(frame, 1)
+#         # flip the frame so that it is not the mirror view
+#         frame = cv2.flip(frame, 1)
 
-        # clone the frame
-        clone = frame.copy()
+#         # clone the frame
+#         clone = frame.copy()
 
-        # get the height and width of the frame
-        (height, width) = frame.shape[:2]
+#         # get the height and width of the frame
+#         (height, width) = frame.shape[:2]
 
-        # get the ROI
-        roi = frame[top:bottom, right:left]
+#         # get the ROI
+#         roi = frame[top:bottom, right:left]
 
-        # Todo: change this? convert the roi to grayscale and blur it
-        #gray = clone
-        #gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-        #gray = cv2.GaussianBlur(gray, (7, 7), 0)
+#         # Todo: change this? convert the roi to grayscale and blur it
+#         #gray = clone
+#         #gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+#         #gray = cv2.GaussianBlur(gray, (7, 7), 0)
 
-        # Todo: Generate test descriptor
-        #plt.imshow(gray)
-        cv2.imwrite('image_temp.jpg', frame)
-        test_descriptor = generate_descriptor('image_temp.jpg')
-        print("test_descriptor", test_descriptor.shape)
-        # Todo: Make predictions. Test.
-        predicted_knn = prediction(knn_model, test_descriptor)
-        predicted_svm = prediction(svm_model, test_descriptor)
+#         # Todo: Generate test descriptor
+#         #plt.imshow(gray)
+#         cv2.imwrite('image_temp.jpg', frame)
+#         test_descriptor = generate_descriptor('image_temp.jpg')
+#         print("test_descriptor", test_descriptor.shape)
+#         # Todo: Make predictions. Test.
+#         predicted_knn = prediction(knn_model, test_descriptor)
+#         predicted_svm = prediction(svm_model, test_descriptor)
 
-        # Todo: Visualize the result
-        cv2.rectangle(clone, (left, top), (right, bottom), (0,255,0), 2)
-#        cv2.putText(image, text, org, font, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]])
-        cv2.putText(clone, "KNN:" + str(predicted_knn) + "SVM:" + str(predicted_svm), (300, 300), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (1, 0, 0), 1, cv2.LINE_AA)
+#         # Todo: Visualize the result
+#         cv2.rectangle(clone, (left, top), (right, bottom), (0,255,0), 2)
+# #        cv2.putText(image, text, org, font, fontScale, color[, thickness[, lineType[, bottomLeftOrigin]]])
+#         cv2.putText(clone, "KNN:" + str(predicted_knn) + "SVM:" + str(predicted_svm), (300, 300), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (1, 0, 0), 1, cv2.LINE_AA)
 
-        # increment the number of frames
-        num_frames += 1
+#         # increment the number of frames
+#         num_frames += 1
 
-        # display the frame with segmented hand
-        cv2.imshow("Video Feed" + str(num_frames), clone)
+#         # display the frame with segmented hand
+#         cv2.imshow("Video Feed" + str(num_frames), clone)
 
 
-        # save snapshots with their classification
-        if num_frames in snapshots:
-            accuracies_knn.append([num_frames, predicted_knn])
-            cv2.imwrite('snapshots/'+ str(num_frames) + '.jpg', clone)
-            accuracies_svm.append([num_frames, predicted_svm])
-            #cv2.imwrite('snapshots/'+ predicted_svm + "_gesture" + num_frame + '.jpg', clone)
+#         # save snapshots with their classification
+#         if num_frames in snapshots:
+#             accuracies_knn.append([num_frames, predicted_knn])
+#             cv2.imwrite('snapshots/'+ str(num_frames) + '.jpg', clone)
+#             accuracies_svm.append([num_frames, predicted_svm])
+#             #cv2.imwrite('snapshots/'+ predicted_svm + "_gesture" + num_frame + '.jpg', clone)
 
-        # observe the keypress by the user
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-          break
-        print(num_frames)
-# free up memory
-camera.release()
-cv2.destroyAllWindows()
-np.save("accuracies_knn", accuracies_knn) # Manually annotate
-np.save("accuracies_svm", accuracies_svm) # Manually annotate
-print("Fin")
+#         # observe the keypress by the user
+#         if cv2.waitKey(1) & 0xFF == ord('q'):
+#           break
+#         print(num_frames)
+# # free up memory
+# camera.release()
+# cv2.destroyAllWindows()
+# np.save("accuracies_knn", accuracies_knn) # Manually annotate
+# np.save("accuracies_svm", accuracies_svm) # Manually annotate
+# print("Fin")
 
 #-----------------
 # VISUALIZATION
